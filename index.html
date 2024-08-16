@@ -1,5 +1,6 @@
 <html><head>
 <title>Look at some Hershey Fonts!</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 <script src='jquery.min.js'></script>
 <script src='jquery.svg.min.js'></script>
 <script src="hershey.js"></script>
@@ -27,7 +28,7 @@ var disp_scale = 2.10;
 function displayText(grp,text,x,y){
   var paths = my_font.pathsForText(text);
   var tg = svg.group(grp, {'transform': 'translate(' + x + ',' + y + ')'});
-  $(paths).each(function(i,path){
+  paths.forEach(function(path){
     //var yoff = Math.floor((i/25)+1)*40;
     if(path.d != []){
       var opts = {};
@@ -45,7 +46,7 @@ function displayTextboxContent(){
   var max_h = max_h - 10; // gutters
   var scale = 1.0;
   var line_height = 35;
-  var lines = $('#textula')[0].value.split('\n');
+  var lines = textarea.value.split('\n');
   // First, split long lines.
   var wrapped_lines = wrapLines(lines, max_w, max_h, scale);
   svg.clear();
@@ -63,7 +64,7 @@ function displayTextboxContent(){
     displayText(grp,wrapped_lines.lines[i], 5, (line_height / 2) + (line_height * i));
   }
   if((scribblePaths != undefined) && (scribblePaths != [])){
-    $(scribblePaths).each(function(i,path){
+    scribblePaths.forEach(function(path){
       svg.path(scribgrp, path);
     });
   }
@@ -71,7 +72,7 @@ function displayTextboxContent(){
             + max_w + '" height="' + max_h + '">';
   str += svg.toSVG(exportable);
   str += '</svg>';
-  $('#svg_out')[0].value = str;
+  svgout.value = str;
 }
 
 function wrapLines(lines, max_w, max_h, scale){
@@ -132,12 +133,12 @@ function drawScribbles(){
   if(thisScribble != []){
     tscribs.push(thisScribble);
   }
-  $(tscribs).each(function(i,scribble){
-   if(scribble !== undefined){
+  tscribs.forEach(function(scribble){
+    if(scribble && (scribble.length > 0)){
       var orig = scribble[0];
       segstr += sep + "M " + orig[0] + " " + orig[1];
       var tscrib = scribble.slice(1,scribble.length);
-      $(tscrib).each(function(j,pt){
+      tscrib.forEach(function(pt){
         segstr += " L " + pt[0] + " " + pt[1];
       });
       sep = " ";
@@ -150,59 +151,77 @@ var mouseDown = false;
 var scribbles = [];
 var thisScribble = [];
 var scribblePaths = null;
+var cnvs;
+var textarea;
+var svgout;
 
-$(document).ready(
-  function() {
-    my_font = new Hershey('scripts');
-    my_font.initFont();
-    setTimeout(function(){
-      $('#hershey_text').each(function(idx,div){
-        var name = div.id + '';
-        $(div).before("<h2>" + name + "</h2>");
-      });
-    }, 250);
-    $('#hershey_text').svg({onLoad: function(tsvg){ svg = tsvg; displayTextboxContent()}});
-    $("#textula").keyup(displayTextboxContent);
-    $("#fontselector").change(changeFont);
+function drawStart(evt) {
+  evt.preventDefault();
+  mouseDown = true;
+  last_mouse = null
+  thisScribble = [];
+}
+
+function drawEnd(evt){
+  evt.preventDefault();
+  if(mouseDown && thisScribble != []){
+    scribbles.push(thisScribble);
+    drawScribbles();
     displayTextboxContent();
-    $('#hershey_text').mousedown(function(evt){
-      mouseDown = true;
-      last_mouse = null
-      thisScribble = [];
-    });
-    $('#hershey_text').mouseup(function(evt){
-      if(mouseDown && thisScribble != []){
-        scribbles.push(thisScribble);
-        drawScribbles();
-        displayTextboxContent();
-      }
-      mouseDown = false;
-      lastMouse = null;
-    });
-    $('#hershey_text').mousemove(function(evt){
-      var el = $('#hershey_text');
-      if(mouseDown){
-        var rads = (3 / 180) * Math.PI;
-        var sin = Math.sin(rads);
-        var cos = Math.cos(rads);
-        var offX = (evt.offsetX - el.offset().left) / disp_scale;
-        var offY = (evt.offsetY - el.offset().top) / disp_scale;
-        var tmpx = offX;
-        offX = offX * cos - offY * sin;
-        offY = offY * cos - tmpx * sin;
-        thisScribble.push([offX,offY]);
-        drawScribbles();
-        displayTextboxContent();
-      }
-    });
+  }
+  mouseDown = false;
+  lastMouse = null;
+}
+
+function drawMove(evt){
+  evt.preventDefault();
+  var el = $(cnvs);
+  if(mouseDown){
+    // need to transform new point's coordinate into drawing space.
+    // (the inverse of the transform displayed over the sticky note)
+    // https://stackoverflow.com/a/33579846
+    // https://stackoverflow.com/a/64984121
+    const svgElem = svg._container.children[0];
+    // get current transformation matrix
+    const matrix = svgElem.children[0].getCTM();
+    const p = svgElem.createSVGPoint();
+    p.x = evt.offsetX;
+    p.y = evt.offsetY;
+    const newp = p.matrixTransform(matrix.inverse());
+    thisScribble.push([newp.x.toFixed(3), newp.y.toFixed(3)]);
+    drawScribbles();
+    displayTextboxContent();
+  }
+}
+
+document.addEventListener(
+  'DOMContentLoaded',
+  function() {
+    const fontselector = document.querySelector('#fontselector');
+    textarea = document.querySelector('#textula');
+    cnvs = document.querySelector('#hershey_text');
+    svgout = document.querySelector('#svg_out');
+
+    my_font = new Hershey(fontselector.value);
+    my_font.initFont();
+
+    $(cnvs).svg({onLoad: function(tsvg){ svg = tsvg; displayTextboxContent()}});
+
+    textarea.addEventListener('keyup', displayTextboxContent);
+    fontselector.addEventListener('change', changeFont);
+
+    cnvs.addEventListener('pointerdown', drawStart);
+    cnvs.addEventListener('pointerup', drawEnd);
+    cnvs.addEventListener('pointermove', drawMove);
+
+    setTimeout(displayTextboxContent, 100);
   }
 );
 
 </script>
 </head>
 <body>
-<div id="dataz"></div>
-<div id='hershey_text' style="width: 600px; height: 670px; background: url(post-it-note.jpg); float:left; cursor: pointer"></div>
+<div id='hershey_text' style="width: 600px; height: 670px; background: url(post-it-note.jpg); float:left; cursor: pointer; touch-action: none"></div>
 <textarea id="textula" rows="10" cols="40" style="float:left">
 Type! (or draw).
 </textarea>
@@ -235,7 +254,7 @@ SVG Data Goes Here.
 <option value="rowmans">rowmans</option>
 <option value="rowmant">rowmant</option>
 <option value="scriptc">scriptc</option>
-<option value="scripts" selected="selected">scripts</option>
+<option value="scripts" selected>scripts</option>
 <option value="symbolic">symbolic</option>
 <option value="timesg">timesg</option>
 <option value="timesi">timesi</option>

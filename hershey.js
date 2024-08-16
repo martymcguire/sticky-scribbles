@@ -21,14 +21,14 @@ Hershey = function(fontName){
   this.fontName = fontName;
 
   this.initFont = function(){
-    $.get('hershey/' + scope.fontName + '.jhf')
-      .success(function(data){
+    fetch('hershey/' + scope.fontName + '.jhf')
+      .then(function(response){ return response.text() })
+      .then(function(data){
         scope.data = data;
         scope.chars = scope.parse_hershey_data(data);
       })
-      .error(function(data){
-        scope.data = data;
-        scope.chars = scope.parse_hershey_data(data.responseText);
+      .catch(function(err){
+        console.log(err);
       });
   }
 
@@ -97,7 +97,7 @@ Hershey = function(fontName){
     var pathstr = '';
     var sep = '';
     if(glyph !== undefined){
-      $(glyph['paths']).each(function(j,seg){
+      glyph['paths'].forEach(function(seg){
        pathstr += sep + scope.pathForSegment(seg);
        sep = ' ';
      });
@@ -112,7 +112,7 @@ Hershey = function(fontName){
     var orig = seg[0];
     segstr += 'M ' + orig[0] + ' ' + orig[1];
     var tseg = seg.slice(1, seg.length);
-    $(tseg).each(function(k, pt){
+    tseg.forEach(function(pt){
       segstr += ' L ' + pt[0] + ' ' + pt[1];
     });
     return segstr;
@@ -135,9 +135,9 @@ Hershey = function(fontName){
     if(glyph === undefined)
       return 0;
 
-    $(glyph['paths']).each(function(j,seg){
+    glyph['paths'].forEach(function(seg){
       if(seg.length != 0){
-        $(seg).each(function(k, pt){
+        seg.forEach(function(pt){
           var y = pt[1];
           if(y > max_y)
             max_y = y;
@@ -148,38 +148,6 @@ Hershey = function(fontName){
     });
 
     return max_y - min_y;
-  }
-
-
-  /**
-   * Array of Path hashes:
-   * [ {'translate': [x,y], 'segments': [[[x,y],...], ...] }
-   */
-  this.pathValuesForText = function(text){
-    var w = 0;
-    var paths = [];
-    for(var i = 0; i < text.length; i++){
-      var ascchr = text.charAt(i);
-      var path = { 'segments': scope.pathValuesForChar(ascchr) };
-      var bounds = scope.boundsForChar(ascchr);
-      w += Math.abs(bounds.left);
-      if(w > 0){
-        path['translate'] = [w,0]
-      }
-      if(path.segments != [])
-        paths.push(path);
-      w += bounds.right;
-    }
-    return paths;
-  }
-
-  this.pathValuesForChar = function(ascchr){
-    var glyph = scope.glyphForChar(ascchr);
-    var segments = [];
-    if(glyph !== undefined){
-      segments = $(glyph['paths'])
-    }
-    return segments;
   }
 
   /**
