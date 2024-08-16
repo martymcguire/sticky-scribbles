@@ -1,0 +1,246 @@
+<html><head>
+<title>Look at some Hershey Fonts!</title>
+<script src='jquery.min.js'></script>
+<script src='jquery.svg.min.js'></script>
+<script src="hershey.js"></script>
+<script>
+/**
+ * Copyright 2011 Marty McGuire
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+var my_font;
+var svg;
+var exportable;
+var disp_scale = 2.10;
+
+function displayText(grp,text,x,y){
+  var paths = my_font.pathsForText(text);
+  var tg = svg.group(grp, {'transform': 'translate(' + x + ',' + y + ')'});
+  $(paths).each(function(i,path){
+    //var yoff = Math.floor((i/25)+1)*40;
+    if(path.d != []){
+      var opts = {};
+      if(path.translate !== undefined)
+        opts['transform'] = 'translate(' + path.translate[0] + ',' + path.translate[1] + ')';
+      svg.path(tg, path.d, opts);
+    }
+  });
+}
+
+function displayTextboxContent(){
+  var max_w = 266; // (75mm / 0.28222mm/px), Inkscape's mm-per-px magic number.
+  var max_h = 266;
+  var max_w = max_w - 10; // gutters
+  var max_h = max_h - 10; // gutters
+  var scale = 1.0;
+  var line_height = 35;
+  var lines = $('#textula')[0].value.split('\n');
+  // First, split long lines.
+  var wrapped_lines = wrapLines(lines, max_w, max_h, scale);
+  svg.clear();
+  var grp = svg.group({'transform': 'rotate(-3) translate(5,80) scale(' + disp_scale + ')'});
+  var opts = {
+        'stroke':'black', 
+        'fill': 'none',
+        'strokeLinecap': 'round', 
+        'strokeLinejoin': 'round',
+  };
+  exportable = svg.group(grp, opts);
+  var scribgrp = svg.group(exportable);
+  grp = svg.group(exportable, {'transform': 'scale(' + wrapped_lines.scale + ')'});
+  for(var i = 0; i < wrapped_lines.lines.length; i++){
+    displayText(grp,wrapped_lines.lines[i], 5, (line_height / 2) + (line_height * i));
+  }
+  if((scribblePaths != undefined) && (scribblePaths != [])){
+    $(scribblePaths).each(function(i,path){
+      svg.path(scribgrp, path);
+    });
+  }
+  var str = '<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="'
+            + max_w + '" height="' + max_h + '">';
+  str += svg.toSVG(exportable);
+  str += '</svg>';
+  $('#svg_out')[0].value = str;
+}
+
+function wrapLines(lines, max_w, max_h, scale){
+  // TODO: split on last char if unbroken by whitespace.
+  var wrapped_lines = [];
+  var done = false;
+  var line_height = 35;
+  while(!done){
+    var scaled_h = max_h / scale;
+    var scaled_w = max_w / scale;
+    for(var i = 0; i < lines.length; i++){
+      var line = lines[i];
+      var newline = "";
+      var line_w = 0;
+      var sep = "";
+      var words = line.split(' '); // TODO: on any whitespace
+      for(var j = 0; j < words.length; j++){
+        var word = words[j];
+        var w = my_font.boundsForText(word).w;
+        var sep_w = my_font.boundsForText(sep).w;
+        var new_w = line_w + sep_w + w;
+        if(new_w < scaled_w){
+          newline += sep + word;
+          line_w += sep_w + w;
+          sep = " ";
+        } else {
+          wrapped_lines.push(newline);
+          newline = word;
+          line_w = w;
+        }
+      }
+      if(newline != "")
+        wrapped_lines.push(newline);
+    }
+    if(wrapped_lines.length * line_height > scaled_h){
+      scale *= 0.9;
+      wrapped_lines = [];
+    } else {
+      done = true;
+    }
+  }
+  return {'lines':wrapped_lines, 'scale':scale};
+}
+
+function changeFont(){
+  var fontName = $('#fontselector option:selected')[0].value;
+  var newfont = new Hershey(fontName);
+  newfont.initFont();
+  setTimeout(function(){ my_font = newfont; displayTextboxContent(); }, 250);
+}
+
+function drawScribbles(){
+  scribblePaths = [];
+  var grp = svg.group();
+  var segstr = "";
+  var sep = "";
+  var tscribs = scribbles.slice(0);
+  if(thisScribble != []){
+    tscribs.push(thisScribble);
+  }
+  $(tscribs).each(function(i,scribble){
+   if(scribble !== undefined){
+      var orig = scribble[0];
+      segstr += sep + "M " + orig[0] + " " + orig[1];
+      var tscrib = scribble.slice(1,scribble.length);
+      $(tscrib).each(function(j,pt){
+        segstr += " L " + pt[0] + " " + pt[1];
+      });
+      sep = " ";
+    }
+  });
+  scribblePaths.push(segstr);
+}
+
+var mouseDown = false;
+var scribbles = [];
+var thisScribble = [];
+var scribblePaths = null;
+
+$(document).ready(
+  function() {
+    my_font = new Hershey('scripts');
+    my_font.initFont();
+    setTimeout(function(){
+      $('#hershey_text').each(function(idx,div){
+        var name = div.id + '';
+        $(div).before("<h2>" + name + "</h2>");
+      });
+    }, 250);
+    $('#hershey_text').svg({onLoad: function(tsvg){ svg = tsvg; displayTextboxContent()}});
+    $("#textula").keyup(displayTextboxContent);
+    $("#fontselector").change(changeFont);
+    displayTextboxContent();
+    $('#hershey_text').mousedown(function(evt){
+      mouseDown = true;
+      last_mouse = null
+      thisScribble = [];
+    });
+    $('#hershey_text').mouseup(function(evt){
+      if(mouseDown && thisScribble != []){
+        scribbles.push(thisScribble);
+        drawScribbles();
+        displayTextboxContent();
+      }
+      mouseDown = false;
+      lastMouse = null;
+    });
+    $('#hershey_text').mousemove(function(evt){
+      var el = $('#hershey_text');
+      if(mouseDown){
+        var rads = (3 / 180) * Math.PI;
+        var sin = Math.sin(rads);
+        var cos = Math.cos(rads);
+        var offX = (evt.offsetX - el.offset().left) / disp_scale;
+        var offY = (evt.offsetY - el.offset().top) / disp_scale;
+        var tmpx = offX;
+        offX = offX * cos - offY * sin;
+        offY = offY * cos - tmpx * sin;
+        thisScribble.push([offX,offY]);
+        drawScribbles();
+        displayTextboxContent();
+      }
+    });
+  }
+);
+
+</script>
+</head>
+<body>
+<div id="dataz"></div>
+<div id='hershey_text' style="width: 600px; height: 670px; background: url(post-it-note.jpg); float:left; cursor: pointer"></div>
+<textarea id="textula" rows="10" cols="40" style="float:left">
+Type! (or draw).
+</textarea>
+<textarea id="svg_out" rows="20" cols="40" style="float:left">
+SVG Data Goes Here.
+</textarea>
+<select id="fontselector">
+<option value="astrology">astrology</option>
+<option value="cursive">cursive</option>
+<option value="cyrilc_1">cyrilc_1</option>
+<option value="cyrillic">cyrillic</option>
+<option value="futural">futural</option>
+<option value="futuram">futuram</option>
+<option value="gothgbt">gothgbt</option>
+<option value="gothgrt">gothgrt</option>
+<option value="gothiceng">gothiceng</option>
+<option value="gothicger">gothicger</option>
+<option value="gothicita">gothicita</option>
+<option value="gothitt">gothitt</option>
+<option value="greek">greek</option>
+<option value="greekc">greekc</option>
+<option value="greeks">greeks</option>
+<option value="japanese">japanese</option>
+<option value="markers">markers</option>
+<option value="mathlow">mathlow</option>
+<option value="mathupp">mathupp</option>
+<option value="meteorology">meteorology</option>
+<option value="music">music</option>
+<option value="rowmand">rowmand</option>
+<option value="rowmans">rowmans</option>
+<option value="rowmant">rowmant</option>
+<option value="scriptc">scriptc</option>
+<option value="scripts" selected="selected">scripts</option>
+<option value="symbolic">symbolic</option>
+<option value="timesg">timesg</option>
+<option value="timesi">timesi</option>
+<option value="timesib">timesib</option>
+<option value="timesr">timesr</option>
+<option value="timesrb">timesrb</option>
+</select>
+</body></html>
