@@ -1,6 +1,7 @@
 <html><head>
 <title>Look at some Hershey Fonts!</title>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
+<script type="module" src='./js/svg-scribbler.js'></script>
 <script type="module">
 /**
  * Copyright 2011 Marty McGuire
@@ -113,64 +114,7 @@ function changeFont(){
   my_font.loadFont(fontPath).then(displayTextboxContent);
 }
 
-function pathForScribble(scribble){
-  var sep = "";
-  var segstr = "";
-  if(scribble && (scribble.length > 0)){
-    var orig = scribble[0];
-    segstr += sep + "M " + orig[0] + " " + orig[1];
-    var tscrib = scribble.slice(1,scribble.length);
-    tscrib.forEach(function(pt){
-      segstr += " L " + pt[0] + " " + pt[1];
-    });
-    sep = " ";
-  }
-  return segstr;
-}
-
-var mouseDown = false;
-var scribbles = [];
-var thisScribble = [];
-var scribblePaths = null;
 var textarea;
-var currentPath;
-
-function drawStart(evt) {
-  evt.preventDefault();
-  mouseDown = true;
-  thisScribble = [];
-  const scribblesElem = document.querySelector('#scribbles');
-  currentPath = svg.path(scribblesElem, { d: "" });
-}
-
-function drawEnd(evt){
-  evt.preventDefault();
-  if(mouseDown && thisScribble != []){
-    scribbles.push(thisScribble);
-  }
-  mouseDown = false;
-  currentPath = null;
-}
-
-function drawMove(evt){
-  evt.preventDefault();
-  if(mouseDown){
-    // need to transform new point's coordinate into drawing space.
-    // (the inverse of the transform displayed over the sticky note)
-    // https://stackoverflow.com/a/33579846
-    // https://stackoverflow.com/a/64984121
-    const svgElem = document.querySelector('#drawing');
-    const wrapper = svgElem.children[0];
-    // get current transformation matrix
-    const matrix = wrapper.getCTM();
-    const p = svgElem.createSVGPoint();
-    p.x = evt.offsetX;
-    p.y = evt.offsetY;
-    const newp = p.matrixTransform(matrix.inverse());
-    thisScribble.push([newp.x.toFixed(3), newp.y.toFixed(3)]);
-    currentPath.setAttribute('d', pathForScribble(thisScribble));
-  }
-}
 
 document.addEventListener(
   'DOMContentLoaded',
@@ -184,11 +128,6 @@ document.addEventListener(
 
     textarea.addEventListener('keyup', displayTextboxContent);
     fontselector.addEventListener('change', changeFont);
-
-    // https://developer.mozilla.org/en-US/docs/Web/API/Pointer_events
-    cnvs.addEventListener('pointerdown', drawStart);
-    cnvs.addEventListener('pointerup', drawEnd);
-    cnvs.addEventListener('pointermove', drawMove);
 
     // https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver
     const svgout = document.querySelector('#svg_out');
@@ -211,6 +150,7 @@ document.addEventListener(
     </g>
   </g>
 </svg>
+<svg-scribbler event-source="#drawing" output-target="#scribbles"></svg-scribbler>
 <textarea id="textula" rows="10" cols="40" style="float:left">
 Type! (or draw).
 </textarea>
