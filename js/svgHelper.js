@@ -1,5 +1,6 @@
 /**
- * Quick and dirty helper for making SVG elements
+ * Quick and dirty helper for making SVG elements.
+ * Inspired by http://keith-wood.name/svg.html
  */
 const svg = {
   group: function(parentElem, attrs) {
