@@ -1,4 +1,4 @@
-These were in a somewhat legible format, so I started working with them# Sticky Scribbles
+# Sticky Scribbles
 
 1. Type some text and choose a font.
 2. Maybe scribble on the sticky note a little.
