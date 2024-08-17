@@ -1,8 +1,7 @@
 <html><head>
 <title>Look at some Hershey Fonts!</title>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<script src="hershey.js"></script>
-<script>
+<script type="module">
 /**
  * Copyright 2011 Marty McGuire
  * 
@@ -18,6 +17,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+import Hershey from './js/hershey.js';
+
 let my_font;
 let exportable;
 
@@ -70,7 +72,7 @@ function displayTextboxContent(){
   const lines = textarea.value.split('\n');
   const wrapped_lines = wrapLines(lines, max_w, max_h, scale);
 
-  textgrp = document.querySelector('#hershey_text');
+  const textgrp = document.querySelector('#hershey_text');
   textgrp.innerHTML = '';
   textgrp.setAttribute('transform','scale(' + wrapped_lines.scale + ')');
   for(var i = 0; i < wrapped_lines.lines.length; i++){
@@ -141,10 +143,8 @@ function wrapLines(lines, max_w, max_h, scale){
 }
 
 function changeFont(){
-  var fontName = document.querySelector('#fontselector').value;
-  var newfont = new Hershey(fontName);
-  newfont.initFont();
-  setTimeout(function(){ my_font = newfont; displayTextboxContent(); }, 250);
+  var fontPath = document.querySelector('#fontselector').value;
+  my_font.loadFont(fontPath).then(displayTextboxContent);
 }
 
 function pathForScribble(scribble){
@@ -217,8 +217,9 @@ document.addEventListener(
     cnvs = document.querySelector('#drawing');
     svgout = document.querySelector('#svg_out');
 
-    my_font = new Hershey(fontselector.value);
-    my_font.initFont();
+    my_font = new Hershey();
+    my_font.loadFont(fontselector.value)
+      .then(displayTextboxContent);
 
     textarea.addEventListener('keyup', displayTextboxContent);
     fontselector.addEventListener('change', changeFont);
@@ -227,7 +228,6 @@ document.addEventListener(
     cnvs.addEventListener('pointerup', drawEnd);
     cnvs.addEventListener('pointermove', drawMove);
 
-    setTimeout(displayTextboxContent, 250);
   }
 );
 
@@ -249,37 +249,37 @@ Type! (or draw).
 SVG Data Goes Here.
 </textarea>
 <select id="fontselector">
-<option value="astrology">astrology</option>
-<option value="cursive">cursive</option>
-<option value="cyrilc_1">cyrilc_1</option>
-<option value="cyrillic">cyrillic</option>
-<option value="futural">futural</option>
-<option value="futuram">futuram</option>
-<option value="gothgbt">gothgbt</option>
-<option value="gothgrt">gothgrt</option>
-<option value="gothiceng">gothiceng</option>
-<option value="gothicger">gothicger</option>
-<option value="gothicita">gothicita</option>
-<option value="gothitt">gothitt</option>
-<option value="greek">greek</option>
-<option value="greekc">greekc</option>
-<option value="greeks">greeks</option>
-<option value="japanese">japanese</option>
-<option value="markers">markers</option>
-<option value="mathlow">mathlow</option>
-<option value="mathupp">mathupp</option>
-<option value="meteorology">meteorology</option>
-<option value="music">music</option>
-<option value="rowmand">rowmand</option>
-<option value="rowmans">rowmans</option>
-<option value="rowmant">rowmant</option>
-<option value="scriptc">scriptc</option>
-<option value="scripts" selected>scripts</option>
-<option value="symbolic">symbolic</option>
-<option value="timesg">timesg</option>
-<option value="timesi">timesi</option>
-<option value="timesib">timesib</option>
-<option value="timesr">timesr</option>
-<option value="timesrb">timesrb</option>
+<option value="./hershey/astrology.jhf">astrology</option>
+<option value="./hershey/cursive.jhf">cursive</option>
+<option value="./hershey/cyrilc_1.jhf">cyrilc_1</option>
+<option value="./hershey/cyrillic.jhf">cyrillic</option>
+<option value="./hershey/futural.jhf">futural</option>
+<option value="./hershey/futuram.jhf">futuram</option>
+<option value="./hershey/gothgbt.jhf">gothgbt</option>
+<option value="./hershey/gothgrt.jhf">gothgrt</option>
+<option value="./hershey/gothiceng.jhf">gothiceng</option>
+<option value="./hershey/gothicger.jhf">gothicger</option>
+<option value="./hershey/gothicita.jhf">gothicita</option>
+<option value="./hershey/gothitt.jhf">gothitt</option>
+<option value="./hershey/greek.jhf">greek</option>
+<option value="./hershey/greekc.jhf">greekc</option>
+<option value="./hershey/greeks.jhf">greeks</option>
+<option value="./hershey/japanese.jhf">japanese</option>
+<option value="./hershey/markers.jhf">markers</option>
+<option value="./hershey/mathlow.jhf">mathlow</option>
+<option value="./hershey/mathupp.jhf">mathupp</option>
+<option value="./hershey/meteorology.jhf">meteorology</option>
+<option value="./hershey/music.jhf">music</option>
+<option value="./hershey/rowmand.jhf">rowmand</option>
+<option value="./hershey/rowmans.jhf">rowmans</option>
+<option value="./hershey/rowmant.jhf">rowmant</option>
+<option value="./hershey/scriptc.jhf">scriptc</option>
+<option value="./hershey/scripts" selected>scripts</option>
+<option value="./hershey/symbolic.jhf">symbolic</option>
+<option value="./hershey/timesg.jhf">timesg</option>
+<option value="./hershey/timesi.jhf">timesi</option>
+<option value="./hershey/timesib.jhf">timesib</option>
+<option value="./hershey/timesr.jhf">timesr</option>
+<option value="./hershey/timesrb.jhf">timesrb</option>
 </select>
 </body></html>
