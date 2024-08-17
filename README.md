@@ -206,5 +206,4 @@ I think this is fun and weird, actually.
 
 Yeah so the tool this was designed to make drawings for isn't really a going thing in 2024.
 
-Um. Sorry? Enjoy your SVG scribbles anyway!fonts-in-svg/)
-  - [Thingiverse](http://www.thingiverse.com/thing:6168)
+Um. Sorry? Enjoy your SVG scribbles anyway!
