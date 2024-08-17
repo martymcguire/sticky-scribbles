@@ -2,6 +2,7 @@
 <title>Look at some Hershey Fonts!</title>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <script type="module" src='./js/svg-scribbler.js'></script>
+<script type="module" src='./js/svg-hersheytext.js'></script>
 <script type="module">
 /**
  * Copyright 2011 Marty McGuire
@@ -24,109 +25,53 @@ import { svg } from './js/svgHelper.js';
 
 let my_font;
 
-let max_w = 266; // (75mm / 0.28222mm/px), Inkscape's mm-per-px magic number.
+// Sizing the SVG content:
+
+// I want an SVG canvas that fits a 3"x3" sticky note.
+// Inkscape has a default pixels-per-inch number of 90ppi.
+// 3in x 90px/in = 270px
+
+// I had some silly metric sticky notes that were 75mm on a side, giving
+// the more convoluted:
+// 75mm * (1mm/10cm) * (1in/2.54cm) * 90px/in = 265.748... ≈ 266px
+let max_w = 266;
 let max_h = 266;
-max_w = max_w - 10; // gutters
-max_h = max_h - 10; // gutters
 
-function displayText(grp,text,x,y){
-  const paths = my_font.pathsForText(text);
-  const tg = svg.group(grp, {'transform': 'translate(' + x + ',' + y + ')'});
-  paths.forEach(function(path){
-    if(path.d != []){
-      const attrs = { d: path.d };
-      if(path.translate !== undefined) {
-        attrs['transform'] = 'translate(' + path.translate[0] + ',' + path.translate[1] + ')';
-      }
-      svg.path(tg, attrs);
-    }
-  });
-}
-
-function displayTextboxContent(){
-  const scale = 1.0;
-  const line_height = 35;
-
-  // First, split long lines.
-  const lines = textarea.value.split('\n');
-  const wrapped_lines = wrapLines(lines, max_w, max_h, scale);
-
-  const textgrp = document.querySelector('#hershey_text');
-  textgrp.innerHTML = '';
-  textgrp.setAttribute('transform','scale(' + wrapped_lines.scale + ')');
-  for(var i = 0; i < wrapped_lines.lines.length; i++){
-    displayText(textgrp, wrapped_lines.lines[i], 5, (line_height / 2) + (line_height * i));
-  }
-}
+// remove 5px each side for gutters why not
+max_w = max_w - 10; // 256
+max_h = max_h - 10; // 256
 
 function updateExport(exportable, svgout) {
-  let str = '<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="'
-            + max_w + '" height="' + max_h + '">';
-  str += exportable.outerHTML;
-  str += '</svg>';
-  svgout.value = str;
-}
-
-function wrapLines(lines, max_w, max_h, scale){
-  // TODO: split on last char if unbroken by whitespace.
-  var wrapped_lines = [];
-  var done = false;
-  var line_height = 35;
-  while(!done){
-    var scaled_h = max_h / scale;
-    var scaled_w = max_w / scale;
-    for(var i = 0; i < lines.length; i++){
-      var line = lines[i];
-      var newline = "";
-      var line_w = 0;
-      var sep = "";
-      var words = line.split(' '); // TODO: on any whitespace
-      for(var j = 0; j < words.length; j++){
-        var word = words[j];
-        var w = my_font.boundsForText(word).w;
-        var sep_w = my_font.boundsForText(sep).w;
-        var new_w = line_w + sep_w + w;
-        if(new_w < scaled_w){
-          newline += sep + word;
-          line_w += sep_w + w;
-          sep = " ";
-        } else {
-          wrapped_lines.push(newline);
-          newline = word;
-          line_w = w;
-        }
-      }
-      if(newline != "")
-        wrapped_lines.push(newline);
-    }
-    if(wrapped_lines.length * line_height > scaled_h){
-      scale *= 0.9;
-      wrapped_lines = [];
-    } else {
-      done = true;
-    }
-  }
-  return {'lines':wrapped_lines, 'scale':scale};
+  const viewBox = '0 0 ' + max_w + ' ' + max_h;
+  svgout.value = `<svg
+      xmlns="http://www.w3.org/2000/svg"
+      version="1.1"
+      viewBox="${viewBox}"
+      width="${max_w}"
+      height="${max_h}">
+      ${exportable.outerHTML}
+    </svg>`;
 }
 
 function changeFont(){
   var fontPath = document.querySelector('#fontselector').value;
-  my_font.loadFont(fontPath).then(displayTextboxContent);
+  my_font.loadFont(fontPath).then(function() {
+    const evt = new CustomEvent('HersheyFont:updated', {
+      bubbles: true,
+      cancelable: true,
+      detail: my_font
+    });
+    document.dispatchEvent(evt);
+  });
 }
-
-var textarea;
 
 document.addEventListener(
   'DOMContentLoaded',
   function() {
-    textarea = document.querySelector('#textula');
     const cnvs = document.querySelector('#drawing');
 
-    const fontselector = document.querySelector('#fontselector');
     my_font = new Hershey();
-    my_font.loadFont(fontselector.value).then(displayTextboxContent);
-
-    textarea.addEventListener('keyup', displayTextboxContent);
+    changeFont();
     fontselector.addEventListener('change', changeFont);
 
     // https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver
@@ -142,6 +87,13 @@ document.addEventListener(
 </script>
 </head>
 <body>
+<!--
+  This conceit of showing a cute sticky note as the background and having all
+  rendered text and scribbled lines appear on it causes some projection problems!
+  With trial and error I found an outer SVG width+height that I liked and use an
+  SVG <g>roup to contain the actual text+drawing paths with a transform that
+  makes them appear to line up with the sticky note background image.
+-->
 <svg id="drawing" style="width: 600px; height: 670px; background: url(post-it-note.jpg); float:left; cursor: pointer; touch-action: none">
   <g id="post-it-wrapper" transform="rotate(-3) translate(5,80) scale(2.10)">
     <g id="exportable" stroke="black" fill="none" strokeLinecap="round" strokeLinejoin="round">
@@ -151,6 +103,8 @@ document.addEventListener(
   </g>
 </svg>
 <svg-scribbler event-source="#drawing" output-target="#scribbles"></svg-scribbler>
+<!-- width and height numbers here taken from the max_w and max_h calculations above -->
+<svg-hersheytext event-source="#textula" output-target="#hershey_text" width="256" height="256"></svg-hersheytext>
 <textarea id="textula" rows="10" cols="40" style="float:left">
 Type! (or draw).
 </textarea>
