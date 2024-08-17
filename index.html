@@ -19,6 +19,7 @@
  */
 
 import Hershey from './js/hershey.js';
+import { svg } from './js/svgHelper.js';
 
 let my_font;
 let exportable;
@@ -27,27 +28,6 @@ let max_w = 266; // (75mm / 0.28222mm/px), Inkscape's mm-per-px magic number.
 let max_h = 266;
 max_w = max_w - 10; // gutters
 max_h = max_h - 10; // gutters
-
-// quick and dirty helper for making SVG elements
-const svg = {
-  group: function(parentElem, attrs) {
-    return this.createElement('g', parentElem, attrs);
-  },
-
-  path: function(parentElem, attrs) {
-    return this.createElement('path', parentElem, attrs);
-  },
-
-  createElement: function(name, parentElem, attrs) {
-    const ns = "http://www.w3.org/2000/svg"
-    const el = document.createElementNS(ns, name);
-    for (const attr in attrs) {
-      el.setAttribute(attr, attrs[attr]);
-    }
-    parentElem.appendChild(el);
-    return el;
-  }
-}
 
 function displayText(grp,text,x,y){
   const paths = my_font.pathsForText(text);
