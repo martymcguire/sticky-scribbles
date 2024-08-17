@@ -1,8 +1,6 @@
 <html><head>
 <title>Look at some Hershey Fonts!</title>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<script src='jquery.min.js'></script>
-<script src='jquery.svg.min.js'></script>
 <script src="hershey.js"></script>
 <script>
 /**
@@ -20,57 +18,82 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var my_font;
-var svg;
-var exportable;
-var disp_scale = 2.10;
+let my_font;
+let exportable;
+
+let max_w = 266; // (75mm / 0.28222mm/px), Inkscape's mm-per-px magic number.
+let max_h = 266;
+max_w = max_w - 10; // gutters
+max_h = max_h - 10; // gutters
+
+// quick and dirty helper for making SVG elements
+const svg = {
+  group: function(parentElem, attrs) {
+    return this.createElement('g', parentElem, attrs);
+  },
+
+  path: function(parentElem, attrs) {
+    return this.createElement('path', parentElem, attrs);
+  },
+
+  createElement: function(name, parentElem, attrs) {
+    const ns = "http://www.w3.org/2000/svg"
+    const el = document.createElementNS(ns, name);
+    for (const attr in attrs) {
+      el.setAttribute(attr, attrs[attr]);
+    }
+    parentElem.appendChild(el);
+    return el;
+  }
+}
 
 function displayText(grp,text,x,y){
-  var paths = my_font.pathsForText(text);
-  var tg = svg.group(grp, {'transform': 'translate(' + x + ',' + y + ')'});
+  const paths = my_font.pathsForText(text);
+  const tg = svg.group(grp, {'transform': 'translate(' + x + ',' + y + ')'});
   paths.forEach(function(path){
     //var yoff = Math.floor((i/25)+1)*40;
     if(path.d != []){
-      var opts = {};
-      if(path.translate !== undefined)
-        opts['transform'] = 'translate(' + path.translate[0] + ',' + path.translate[1] + ')';
-      svg.path(tg, path.d, opts);
+      const attrs = { d: path.d };
+      if(path.translate !== undefined) {
+        attrs['transform'] = 'translate(' + path.translate[0] + ',' + path.translate[1] + ')';
+      }
+      svg.path(tg, attrs);
     }
   });
 }
 
 function displayTextboxContent(){
-  var max_w = 266; // (75mm / 0.28222mm/px), Inkscape's mm-per-px magic number.
-  var max_h = 266;
-  var max_w = max_w - 10; // gutters
-  var max_h = max_h - 10; // gutters
-  var scale = 1.0;
-  var line_height = 35;
-  var lines = textarea.value.split('\n');
+  const scale = 1.0;
+  const line_height = 35;
+
   // First, split long lines.
-  var wrapped_lines = wrapLines(lines, max_w, max_h, scale);
-  svg.clear();
-  var grp = svg.group({'transform': 'rotate(-3) translate(5,80) scale(' + disp_scale + ')'});
-  var opts = {
-        'stroke':'black', 
-        'fill': 'none',
-        'strokeLinecap': 'round', 
-        'strokeLinejoin': 'round',
-  };
-  exportable = svg.group(grp, opts);
-  var scribgrp = svg.group(exportable);
-  grp = svg.group(exportable, {'transform': 'scale(' + wrapped_lines.scale + ')'});
+  const lines = textarea.value.split('\n');
+  const wrapped_lines = wrapLines(lines, max_w, max_h, scale);
+
+  textgrp = document.querySelector('#hershey_text');
+  textgrp.innerHTML = '';
+  textgrp.setAttribute('transform','scale(' + wrapped_lines.scale + ')');
   for(var i = 0; i < wrapped_lines.lines.length; i++){
-    displayText(grp,wrapped_lines.lines[i], 5, (line_height / 2) + (line_height * i));
+    displayText(textgrp, wrapped_lines.lines[i], 5, (line_height / 2) + (line_height * i));
   }
+
+  /*
+  const scribgrp = document.querySelector('#scribbles');
   if((scribblePaths != undefined) && (scribblePaths != [])){
     scribblePaths.forEach(function(path){
       svg.path(scribgrp, path);
     });
   }
-  var str = '<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="'
+  */
+
+  updateExport();
+}
+
+function updateExport() {
+  exportable = document.querySelector('#exportable');
+  let str = '<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="'
             + max_w + '" height="' + max_h + '">';
-  str += svg.toSVG(exportable);
+  str += exportable.outerHTML;
   str += '</svg>';
   svgout.value = str;
 }
@@ -118,33 +141,25 @@ function wrapLines(lines, max_w, max_h, scale){
 }
 
 function changeFont(){
-  var fontName = $('#fontselector option:selected')[0].value;
+  var fontName = document.querySelector('#fontselector').value;
   var newfont = new Hershey(fontName);
   newfont.initFont();
   setTimeout(function(){ my_font = newfont; displayTextboxContent(); }, 250);
 }
 
-function drawScribbles(){
-  scribblePaths = [];
-  var grp = svg.group();
-  var segstr = "";
+function pathForScribble(scribble){
   var sep = "";
-  var tscribs = scribbles.slice(0);
-  if(thisScribble != []){
-    tscribs.push(thisScribble);
+  var segstr = "";
+  if(scribble && (scribble.length > 0)){
+    var orig = scribble[0];
+    segstr += sep + "M " + orig[0] + " " + orig[1];
+    var tscrib = scribble.slice(1,scribble.length);
+    tscrib.forEach(function(pt){
+      segstr += " L " + pt[0] + " " + pt[1];
+    });
+    sep = " ";
   }
-  tscribs.forEach(function(scribble){
-    if(scribble && (scribble.length > 0)){
-      var orig = scribble[0];
-      segstr += sep + "M " + orig[0] + " " + orig[1];
-      var tscrib = scribble.slice(1,scribble.length);
-      tscrib.forEach(function(pt){
-        segstr += " L " + pt[0] + " " + pt[1];
-      });
-      sep = " ";
-    }
-  });
-  scribblePaths.push(segstr);
+  return segstr;
 }
 
 var mouseDown = false;
@@ -154,44 +169,44 @@ var scribblePaths = null;
 var cnvs;
 var textarea;
 var svgout;
+var currentPath;
 
 function drawStart(evt) {
   evt.preventDefault();
   mouseDown = true;
-  last_mouse = null
   thisScribble = [];
+  const scribblesElem = document.querySelector('#scribbles');
+  currentPath = svg.path(scribblesElem, { d: "" });
 }
 
 function drawEnd(evt){
   evt.preventDefault();
   if(mouseDown && thisScribble != []){
     scribbles.push(thisScribble);
-    drawScribbles();
-    displayTextboxContent();
   }
   mouseDown = false;
-  lastMouse = null;
+  currentPath = null;
 }
 
 function drawMove(evt){
   evt.preventDefault();
-  var el = $(cnvs);
   if(mouseDown){
     // need to transform new point's coordinate into drawing space.
     // (the inverse of the transform displayed over the sticky note)
     // https://stackoverflow.com/a/33579846
     // https://stackoverflow.com/a/64984121
-    const svgElem = svg._container.children[0];
+    const svgElem = document.querySelector('#drawing');
+    const wrapper = svgElem.children[0];
     // get current transformation matrix
-    const matrix = svgElem.children[0].getCTM();
+    const matrix = wrapper.getCTM();
     const p = svgElem.createSVGPoint();
     p.x = evt.offsetX;
     p.y = evt.offsetY;
     const newp = p.matrixTransform(matrix.inverse());
     thisScribble.push([newp.x.toFixed(3), newp.y.toFixed(3)]);
-    drawScribbles();
-    displayTextboxContent();
+    currentPath.setAttribute('d', pathForScribble(thisScribble));
   }
+  updateExport();
 }
 
 document.addEventListener(
@@ -199,13 +214,11 @@ document.addEventListener(
   function() {
     const fontselector = document.querySelector('#fontselector');
     textarea = document.querySelector('#textula');
-    cnvs = document.querySelector('#hershey_text');
+    cnvs = document.querySelector('#drawing');
     svgout = document.querySelector('#svg_out');
 
     my_font = new Hershey(fontselector.value);
     my_font.initFont();
-
-    $(cnvs).svg({onLoad: function(tsvg){ svg = tsvg; displayTextboxContent()}});
 
     textarea.addEventListener('keyup', displayTextboxContent);
     fontselector.addEventListener('change', changeFont);
@@ -214,14 +227,21 @@ document.addEventListener(
     cnvs.addEventListener('pointerup', drawEnd);
     cnvs.addEventListener('pointermove', drawMove);
 
-    setTimeout(displayTextboxContent, 100);
+    setTimeout(displayTextboxContent, 250);
   }
 );
 
 </script>
 </head>
 <body>
-<div id='hershey_text' style="width: 600px; height: 670px; background: url(post-it-note.jpg); float:left; cursor: pointer; touch-action: none"></div>
+<svg id="drawing" style="width: 600px; height: 670px; background: url(post-it-note.jpg); float:left; cursor: pointer; touch-action: none">
+  <g id="post-it-wrapper" transform="rotate(-3) translate(5,80) scale(2.10)">
+    <g id="exportable" stroke="black" fill="none" strokeLinecap="round" strokeLinejoin="round">
+      <g id="hershey_text"></g>
+      <g id="scribbles"></g>
+    </g>
+  </g>
+</svg>
 <textarea id="textula" rows="10" cols="40" style="float:left">
 Type! (or draw).
 </textarea>
