@@ -1,6 +1,15 @@
 <html><head>
-<title>Look at some Hershey Fonts!</title>
+<title>juSVGraw!</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✏️</text></svg>">
 <meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  fieldset {
+    display: flex;
+    flex-direction: column;
+    max-width: 80ch;
+    padding: 1em;
+  }
+</style>
 <script type="module" src='./js/svg-scribbler.js'></script>
 <script type="module" src='./js/svg-hersheytext.js'></script>
 <script type="module">
@@ -44,13 +53,13 @@ max_h = max_h - 10; // 256
 function updateExport(exportable, svgout) {
   const viewBox = '0 0 ' + max_w + ' ' + max_h;
   svgout.value = `<svg
-      xmlns="http://www.w3.org/2000/svg"
-      version="1.1"
-      viewBox="${viewBox}"
-      width="${max_w}"
-      height="${max_h}">
-      ${exportable.outerHTML}
-    </svg>`;
+  xmlns="http://www.w3.org/2000/svg"
+  version="1.1"
+  viewBox="${viewBox}"
+  width="${max_w}"
+  height="${max_h}">
+  ${exportable.outerHTML}
+</svg>`;
 }
 
 function changeFont(){
@@ -94,7 +103,7 @@ document.addEventListener(
   SVG <g>roup to contain the actual text+drawing paths with a transform that
   makes them appear to line up with the sticky note background image.
 -->
-<svg id="drawing" style="width: 600px; height: 670px; background: url(post-it-note.jpg); float:left; cursor: pointer; touch-action: none">
+<svg id="drawing" style="width: 600px; height: 670px; background: url(post-it-note.jpg); cursor: pointer; touch-action: none">
   <g id="post-it-wrapper" transform="rotate(-3) translate(5,80) scale(2.10)">
     <g id="exportable" stroke="black" fill="none" strokeLinecap="round" strokeLinejoin="round">
       <g id="hershey_text"></g>
@@ -105,44 +114,55 @@ document.addEventListener(
 <svg-scribbler event-source="#drawing" output-target="#scribbles"></svg-scribbler>
 <!-- width and height numbers here taken from the max_w and max_h calculations above -->
 <svg-hersheytext event-source="#textula" output-target="#hershey_text" width="256" height="256"></svg-hersheytext>
-<textarea id="textula" rows="10" cols="40" style="float:left">
-Type! (or draw).
-</textarea>
-<textarea id="svg_out" rows="20" cols="40" style="float:left">
-SVG Data Goes Here.
-</textarea>
-<select id="fontselector">
-<option value="./hershey/astrology.jhf">astrology</option>
-<option value="./hershey/cursive.jhf">cursive</option>
-<option value="./hershey/cyrilc_1.jhf">cyrilc_1</option>
-<option value="./hershey/cyrillic.jhf">cyrillic</option>
-<option value="./hershey/futural.jhf">futural</option>
-<option value="./hershey/futuram.jhf">futuram</option>
-<option value="./hershey/gothgbt.jhf">gothgbt</option>
-<option value="./hershey/gothgrt.jhf">gothgrt</option>
-<option value="./hershey/gothiceng.jhf">gothiceng</option>
-<option value="./hershey/gothicger.jhf">gothicger</option>
-<option value="./hershey/gothicita.jhf">gothicita</option>
-<option value="./hershey/gothitt.jhf">gothitt</option>
-<option value="./hershey/greek.jhf">greek</option>
-<option value="./hershey/greekc.jhf">greekc</option>
-<option value="./hershey/greeks.jhf">greeks</option>
-<option value="./hershey/japanese.jhf">japanese</option>
-<option value="./hershey/markers.jhf">markers</option>
-<option value="./hershey/mathlow.jhf">mathlow</option>
-<option value="./hershey/mathupp.jhf">mathupp</option>
-<option value="./hershey/meteorology.jhf">meteorology</option>
-<option value="./hershey/music.jhf">music</option>
-<option value="./hershey/rowmand.jhf">rowmand</option>
-<option value="./hershey/rowmans.jhf">rowmans</option>
-<option value="./hershey/rowmant.jhf">rowmant</option>
-<option value="./hershey/scriptc.jhf">scriptc</option>
-<option value="./hershey/scripts" selected>scripts</option>
-<option value="./hershey/symbolic.jhf">symbolic</option>
-<option value="./hershey/timesg.jhf">timesg</option>
-<option value="./hershey/timesi.jhf">timesi</option>
-<option value="./hershey/timesib.jhf">timesib</option>
-<option value="./hershey/timesr.jhf">timesr</option>
-<option value="./hershey/timesrb.jhf">timesrb</option>
-</select>
+<fieldset>
+  <legend>Text with Hershey (vector) fonts</legend>
+  <label for="textula">Text</label>
+  <textarea id="textula" rows="10" cols="40">Type! (or draw).</textarea>
+  <label for="fontselector">Select font</label>
+  <select id="fontselector">
+    <optgroup label="ASCII-friendly">
+      <option value="./hershey/cursive.jhf">cursive</option>
+      <option value="./hershey/futural.jhf">futural</option>
+      <option value="./hershey/futuram.jhf">futuram</option>
+      <option value="./hershey/gothgbt.jhf">gothgbt</option>
+      <option value="./hershey/gothgrt.jhf">gothgrt</option>
+      <option value="./hershey/gothiceng.jhf">gothiceng</option>
+      <option value="./hershey/gothicger.jhf">gothicger</option>
+      <option value="./hershey/gothicita.jhf">gothicita</option>
+      <option value="./hershey/gothitt.jhf">gothitt</option>
+      <option value="./hershey/rowmand.jhf">rowmand</option>
+      <option value="./hershey/rowmans.jhf">rowmans</option>
+      <option value="./hershey/rowmant.jhf">rowmant</option>
+      <option value="./hershey/scriptc.jhf">scriptc</option>
+      <option value="./hershey/scripts.jhf" selected>scripts</option>
+      <option value="./hershey/timesg.jhf">timesg</option>
+      <option value="./hershey/timesi.jhf">timesi</option>
+      <option value="./hershey/timesib.jhf">timesib</option>
+      <option value="./hershey/timesr.jhf">timesr</option>
+      <option value="./hershey/timesrb.jhf">timesrb</option>
+    </optgroup>
+    <optgroup label="ASCII-unfriendly">
+      <option value="./hershey/astrology.jhf">astrology</option>
+      <option value="./hershey/cyrilc_1.jhf">cyrilc_1</option>
+      <option value="./hershey/cyrillic.jhf">cyrillic</option>
+      <option value="./hershey/greek.jhf">greek</option>
+      <option value="./hershey/greekc.jhf">greekc</option>
+      <option value="./hershey/greeks.jhf">greeks</option>
+      <option value="./hershey/japanese.jhf">japanese</option>
+      <option value="./hershey/markers.jhf">markers</option>
+      <option value="./hershey/mathlow.jhf">mathlow</option>
+      <option value="./hershey/mathupp.jhf">mathupp</option>
+      <option value="./hershey/meteorology.jhf">meteorology</option>
+      <option value="./hershey/music.jhf">music</option>
+      <option value="./hershey/symbolic.jhf">symbolic</option>
+    </optgroup>
+  </select>
+</fieldset>
+<fieldset>
+  <legend>Output</legend>
+  <label for="svg_out">SVG source</label>
+  <textarea id="svg_out" rows="40" cols="80">
+  SVG Data Goes Here.
+  </textarea>
+</fieldset>
 </body></html>
