@@ -7,12 +7,10 @@
 
 Need to erase? A page refresh will clear all scribbling.
 
-The fonts are vector strokes suitable for plotting. They're called [Hershey fonts](http://emergent.
-
-You can also [find the full source and history on GitHub](https://github.com/martymcguire/sticky-scribbles).u
----
-npythonic.net/software/hershey)
+The fonts are vector strokes suitable for plotting. They're called [Hershey fonts](http://emergent.unpythonic.net/software/hershey)
 and their story is pretty interesting!
+
+You can also [find the full source and history on GitHub](https://github.com/martymcguire/sticky-scribbles).
 
 ## Why
 
@@ -33,9 +31,7 @@ The work area for the Cupcake CNC is 10cm square, which is just a little bit big
 a pad of 3"x3" name brand sticky notes. So, these easily becamie a target for my ~~madnes~~ making.
 
 In February of that year I particpated in "Thing-a-Day" on Posterous (RIP), and worked on
-seve
----
-ral projects to try and boost the ease of use of this whole ecosystem.
+several projects to try and boost the ease of use of this whole ecosystem.
 
 ## A timeline you didn't ask for
 
@@ -50,7 +46,8 @@ let you save (simple) drawings as G-Code that you could plot using a Cupcake CNC
   - [Thingiverse](http://www.thingiverse.com/thing:5986)
 - [2011-02-02 - Added a pen registration step and homing support](https://martymcgui.re/2011/02/02/thing-a-day-2011-%232-new-features-for-inkscape-unicorn-pen-registration-and-homing-support/)
 - [2011-02-03 - Added support for multiple copies and continuous plotting](https://martymcgui.re/2011/02/03/thing-a-day-2011-%233-copies-and-continuous-plotting-for-inkscape-unicorn/)
-- [2011-02-04 - Added support for pausing to change pens]
+- [2011-02-04 - Added support for pausing to change pens](https://martymcgui.re/2011/02/04/thing-a-day-2011-%234-pen-changing/)
+
 While I made this Inkscape extension to serve a very niche machine, I ended up continuing to
 improve it here and there. I was surprised to see it adopted by some DIY CNC projects from
 all over the world!
@@ -59,16 +56,16 @@ Unfortunately, I never made much of a habit out of using my own extension, so wh
 interfaces changed for Inkscape 0.91.x, I ended up marking it read-only.
 
 There are over 100 forks, though, so maybe somebody picked it back up!
-(https://martymcgui.re/2011/02/04/thing-a-day-2011-%234-pen-changing/)
 
 ### Hershey fonts
 
 Matt introduced me to [Hershey fonts](http://emergent.unpythonic.net/software/hershey), a set
-of vector fonts designed for tThese were in a somewhat legible format, so I became a little obsessed with using them for plotter projects.he U.S. governm -ent for use on CNC machines for plotting or engraving.
+of vector fonts designed for the U.S. government for use on CNC machines for plotting or engraving.
+These were in a somewhat legible format, so I became a little obsessed with using them for
+plotter projects.
 
-These were in a somewhat legible format, so I started working with them
-
-- [2011-02-06 Announced conversions of the Hershey fonts 
+- [2011-02-06 Announced conversions of the Hershey fonts to SVG](https://martymcgui.re/2011/02/06/thing-a-day-2011-#6-hershey-fonts-in-svg/)
+  - [Hershey fonts in SVG on Thingiverse](http://www.thingiverse.com/thing:6168)
   - Windell of Evil Mad Scientist Laboratories was [motivated by this to make an Inkscape extenstion for rendering Hershey text](https://www.evilmadscientist.com/2011/hershey-text-an-inkscape-extension-for-engraving-fonts/).
     That extension became _part of Inkscape_ and after time and improvements it's still there!
 - [2011-02-08 - Hershey font rendering as SVG with JavaScript with Raphaël.js](https://martymcgui.re/2011/02/08/thing-a-day-2011-%238-hershey-font-rendering-in-javascript-with-rapha%C3%ABl/).
