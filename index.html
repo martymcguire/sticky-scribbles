@@ -22,7 +22,6 @@ import Hershey from './js/hershey.js';
 import { svg } from './js/svgHelper.js';
 
 let my_font;
-let exportable;
 
 let max_w = 266; // (75mm / 0.28222mm/px), Inkscape's mm-per-px magic number.
 let max_h = 266;
@@ -33,7 +32,6 @@ function displayText(grp,text,x,y){
   const paths = my_font.pathsForText(text);
   const tg = svg.group(grp, {'transform': 'translate(' + x + ',' + y + ')'});
   paths.forEach(function(path){
-    //var yoff = Math.floor((i/25)+1)*40;
     if(path.d != []){
       const attrs = { d: path.d };
       if(path.translate !== undefined) {
@@ -58,21 +56,9 @@ function displayTextboxContent(){
   for(var i = 0; i < wrapped_lines.lines.length; i++){
     displayText(textgrp, wrapped_lines.lines[i], 5, (line_height / 2) + (line_height * i));
   }
-
-  /*
-  const scribgrp = document.querySelector('#scribbles');
-  if((scribblePaths != undefined) && (scribblePaths != [])){
-    scribblePaths.forEach(function(path){
-      svg.path(scribgrp, path);
-    });
-  }
-  */
-
-  updateExport();
 }
 
-function updateExport() {
-  exportable = document.querySelector('#exportable');
+function updateExport(exportable, svgout) {
   let str = '<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="'
             + max_w + '" height="' + max_h + '">';
   str += exportable.outerHTML;
@@ -146,9 +132,7 @@ var mouseDown = false;
 var scribbles = [];
 var thisScribble = [];
 var scribblePaths = null;
-var cnvs;
 var textarea;
-var svgout;
 var currentPath;
 
 function drawStart(evt) {
@@ -186,28 +170,33 @@ function drawMove(evt){
     thisScribble.push([newp.x.toFixed(3), newp.y.toFixed(3)]);
     currentPath.setAttribute('d', pathForScribble(thisScribble));
   }
-  updateExport();
 }
 
 document.addEventListener(
   'DOMContentLoaded',
   function() {
-    const fontselector = document.querySelector('#fontselector');
     textarea = document.querySelector('#textula');
-    cnvs = document.querySelector('#drawing');
-    svgout = document.querySelector('#svg_out');
+    const cnvs = document.querySelector('#drawing');
 
+    const fontselector = document.querySelector('#fontselector');
     my_font = new Hershey();
-    my_font.loadFont(fontselector.value)
-      .then(displayTextboxContent);
+    my_font.loadFont(fontselector.value).then(displayTextboxContent);
 
     textarea.addEventListener('keyup', displayTextboxContent);
     fontselector.addEventListener('change', changeFont);
 
+    // https://developer.mozilla.org/en-US/docs/Web/API/Pointer_events
     cnvs.addEventListener('pointerdown', drawStart);
     cnvs.addEventListener('pointerup', drawEnd);
     cnvs.addEventListener('pointermove', drawMove);
 
+    // https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver
+    const svgout = document.querySelector('#svg_out');
+    const exportable = cnvs.querySelector('#exportable');
+    const observer = new MutationObserver(function() {
+      updateExport(exportable, svgout);
+    });
+    observer.observe(cnvs, { attributes: true, childList: true, subtree: true });
   }
 );
 
