@@ -194,6 +194,12 @@ that kicks off whenever elements are added or changed down in the SVG tree. I lo
 
 ## Known Issues
 
+### It's not responsive!
+
+Whew, I know. I jammed the original version of this together before I learned about SVG `viewBox` and `preserveAspectRatio`.
+
+It should be possible to fix this up so the canvas fits the device width, but there's some munging to do with the sticky note background image (maybe an [`<image>`](https://developer.mozilla.org/en-US/docs/Web/SVG/Tutorial/SVG_Image_Tag)?) and the drawing code will, I think, need to take the actual width+height of the SVG on the page into account.
+
 ### Naive `pointer*` events handling does unexpected things on multi-touch devices
 
 For example, this two-finger drag makes kind of a zig-zaggy filled-in area instead of two distinct lines:
